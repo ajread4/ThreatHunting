@@ -1,3 +1,80 @@
+# View Named Pipes [T1559](https://attack.mitre.org/techniques/T1559/)
+1. Snag the SRUM database at ```C:\Windows\System32\sru\SRUDB.dat``` and analyze using [srumdump](https://github.com/MarkBaggett/srum-dump). 
+
+# File Exfil Activity [T1213.002](https://attack.mitre.org/techniques/T1213/002/)
+1. Identify odd SharePoint sync for data exfil using [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
+
+# Find Data in OneDrive [T1530](https://attack.mitre.org/techniques/T1530/)
+1. Look for data within ```Appdata\Local\Microsoft\OneDrive\logs```, specifically SyncEngine.odl and SyncDiagnostics.log. Use [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
+2. Identify odd SharePoint sync for data exfil using [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
+
+# Messaging Applications [T1213.005](https://attack.mitre.org/techniques/T1213/005/)
+1. Look for information within ```AppData\Roaming\Microsoft\Teams\IndexDB```. 
+2. Parse Microsoft Teams data with [Forensics.IM](https://github.com/lxndrblz/forensicsim/). Use the script below to look at properties: 
+	```
+	$teams_metadata = cat .\output.json | ConvertFrom-Json
+	$users = @{}
+	$messages = @{}
+	
+	# Initialise user hashtable for correlation
+	foreach ($data in $teams_metadata) {
+   	if ($data.record_type -eq "contact") {
+     	$users.add($data.mri, $data.userPrincipalName)
+   	}
+	}
+	
+	# Combine all conversations/messages with the same ID
+	foreach ($data in $teams_metadata) {
+  	if ($data.record_type -eq "message") {
+    	if ($messages.keys -notcontains $data.conversationId) {
+      	$messages[$data.conversationId] = [System.Collections.ArrayList]@()
+    	}
+    	$messages[$data.conversationId].add($data) > $null
+  	}
+	}
+	
+	# Print the parsed output focused on the significant values
+	foreach ($conversationID in $messages.keys) {
+  	Write-Host "Conversation ID: $conversationID`n"
+  	$conversation = $messages[$conversationID] | Sort createdTime
+  	foreach ($message in $conversation) {
+    	$createdTime = $message.createdTime
+    	$fromme = $message.isFromMe
+    	$content = $message.content
+    	$sender = $users[$message.creator]
+    	$direction = if ($message.isFromMe) { 'Outbound' } else { 'Inbound' }
+    	$attachments = if ($message.properties.files) { 'True' } else {'False'}
+	
+    	Write-Host "Created Time: $createdTime"
+    	Write-Host "Sent by: $sender"
+    	Write-Host "Direction: $direction"
+    	Write-Host "Message content: $content"
+    	Write-Host "Has attachment: $attachments"
+    	
+    	# Parse file attachment details
+    	if ($attachments -eq "True") {
+      	foreach ($attachment in $message.properties.files) {
+        	$filename = $attachment.fileName
+        	$location = $attachment.fileInfo.fileUrl
+        	$type = $attachment.fileType
+        	
+        	Write-Host "Attachment name: $filename"
+        	Write-Host "Attachment location: $location"
+        	Write-Host "Attachment type: $type"
+      	}
+    	}
+    	Write-Host "`n"
+  	}
+	
+  	Write-host "----------------`n"
+	```
+
+# Identify a Keylogger [T1056.001](https://attack.mitre.org/techniques/T1056/001/)
+1. Look at manifest.json within with Chrome extension and focus on the background.js or script.js file. 
+
+# VPN Discovery [T1133](https://attack.mitre.org/techniques/T1133/)
+1. Look within the registry for ```Software\Microsoft\Windows NT\CurrentVersion\NetworkList```. 
+
 # Disable Protections [T1562.001](https://attack.mitre.org/techniques/T1562/001/)
 1. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Network > Network Connections > Windows Defender Firewall > Domain Profile```. 
 2. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Windows Components```
@@ -118,6 +195,7 @@
 16. Use Live-Forensicator Tool with ```.\Forensicator -EVTX EVTX```, and search for RDP Logon Activities with an html file, can be found [here](https://github.com/Johnng007/Live-Forensicator). 
 17. Use [Chainsaw](https://github.com/WithSecureLabs/chainsaw/tree/master) and an EVTX dump to search for failed logons with ```./chainsaw hunt [evtx] -r ./rules/```. 
 18. Run the following command in PowerShell on the system: ```Get-NetTCPConnection | select Local*, Remote*, State, OwningProcess,` @{n="ProcName";e={(Get-Process -Id $_.OwningProcess).ProcessName}},` @{n="ProcPath";e={(Get-Process -Id $_.OwningProcess).Path}} | sort State | ft -Auto ```. 
+19. Run ```qwinsta``` on the command line. 
 
 # View Change to Logging [T1070.001](https://attack.mitre.org/techniques/T1070/001/)
 1. Use ```eventvwr.msc``` with Windows System Event logs 4719. 
@@ -193,6 +271,7 @@
 12. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```.
 13. Look at OpenSavePidlMRU at ```HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU```. 
 14. Use ShellBags explorer from EZ Tools. 
+15. Look for data within ```Appdata\Local\Microsoft\OneDrive\logs```, specifically SyncEngine.odl and SyncDiagnostics.log. Use [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
 
 # Examine Executables [T1547.004](https://attack.mitre.org/techniques/T1547/004/) [T1059.006](https://attack.mitre.org/techniques/T1059/006/) [T1559.001]([T1070.004](https://attack.mitre.org/techniques/T1559/001/)) [T1027.004]([T1070.004](https://attack.mitre.org/techniques/T1027/004/)) [T1027.004]([T1070.009](https://attack.mitre.org/techniques/T1027/009/)) [T1055.002](https://attack.mitre.org/techniques/T1055/002)
 1. View the registry at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\UserAssist\{GUID}\Count``` where the GUID is specific for the OS. 
@@ -277,9 +356,32 @@
 12. View registry for new service creations at ```SYSTEM\CurrentControlSet\Services\[servicename]```. 
 13. Within Powershell run the command: ```Get-CimInstance -ClassName Win32_Service | Where-Object { $_.State -eq "Running" } | Select-Object Name, DisplayName, State, StartMode, PathName, ProcessId | ft -AutoSize```. 
 14. Within Powershell, look for non-running services with ```Get-CimInstance -ClassName Win32_Service | Where-Object { $_.State -ne "Running" } | Select-Object @{Name='Name'; Expression={if ($_.Name.Length -gt 22) { "$($_.Name.Substring(0,19))..." } else { $_.Name }}}, @{Name='DisplayName'; Expression={if ($_.DisplayName.Length -gt 45) { "$($_.DisplayName.Substring(0,42))..." } else { $_.DisplayName }}}, State, StartMode, PathName, ProcessId | Format-Table -AutoSize```
+15. Open ```services.msc``` within the apps and search for items via GUI. 
+16. Examine the registry at ```HKLM\SYSTEM\CurrentControlSet\Services```. 
+17. Examine via powershell with ```Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}```. 
+18. Examine with PowerShell using 
+	```
+	$services = Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}
+	
+	foreach ($service in $services) {
+    	$serviceName = $service.Name
+    	$serviceDisplayName = $service.DisplayName
+    	$serviceStatus = $service.Status
+    	$serviceWMI = (Get-WmiObject Win32_Service | Where-Object { $_.Name -eq $serviceName })
+    	$servicePath = $serviceWMI.PathName
+    	$serviceUser = $serviceWMI.StartName
+	
+    	Write-Host "Service Name: $serviceName"
+    	Write-Host "Display Name: $serviceDisplayName"
+    	Write-Host "Service Status: $serviceStatus"
+    	Write-Host "Executable Path: $servicePath"
+    	Write-Host "User Context: $serviceUser"
+    	Write-Host ""
+	}
+	```
 
 # Analyze OneNote Files [T1137](https://attack.mitre.org/techniques/T1137)
-1. Use ```OneNoteAnalyzer``` found [here](https://github.com/knight0x07/OneNoteAnalyzer)
+1. Use ```OneNoteAnalyzer``` found [here](https://github.com/knight0x07/OneNoteAnalyzer). 
 
 # Unsigned Files in C:\Windows\System32 [T1587.002](https://attack.mitre.org/techniques/T1587/002)
 1. Use ```sigcheck``` within Sysinternals.
@@ -366,7 +468,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 
 # Explore Scheduled Tasks [T1036.004](https://attack.mitre.org/techniques/T136/004) [T1053.005](https://attack.mitre.org/techniques/T1053/005)
 1. Use ```Get-WinEvent``` with Sysmon Event Logs. 
-	- Command to use is ```Get-WinEvent -Path <Path to Log> -FilterXPath '*/System/EventID=1'```
+	- Command to use is ```Get-WinEvent -Path <Path to Log> -FilterXPath '*/System/EventID=1'```.
 2. Use ```eventvwr.msc``` with Sysmon Event logs and Event ID 1. 
 3. Use ```Get-ScheduledTask``` within Powershell. https://learn.microsoft.com/en-us/sysinternals/downloads/procmon
 	- Command to use is ```Get-ScheduledTask -TaskName [TaskName]```
@@ -381,6 +483,13 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 11. Look for hive key changes in the NetSh key with ```Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Netsh"```. 
 12. Look at Task Scheduler App. 
 13. Focus on WordWheelQuery from the START menu located at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\WordWheelQuery``` using Registy Explorer. 
+14. Use Get-WinEvent with ``` Get-WinEvent -FilterHashTable @{LogName='System';ID='7045'} | fl```. 
+15. Use Get-WinEvent with ``` Get-WinEvent -FilterHashTable @{LogName='Security';ID='4697'} | fl```. 
+16. Use ```Get-ScheduledTask | Where-Object {$_.State —ne "Disabled"}```. 
+17. Use ```schtasks.exe /query /fo CSV | findstr /V Disabled```. 
+18. Use ```Get-ScheduledTask | Where-Object {$_.Date —ne $null —and $_.State —ne "Disabled"} | Sort-Object Date | select Date,TaskName,Author,State,TaskPath | ft```. 
+19. Open ```services.msc``` within the apps and search for items via GUI. 
+20. Examine via powershell with ```Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}```. 
 
 # Explore Process Thread Activity [T1134.003](https://attack.mitre.org/techniques/T1134/003) [T1574.005](https://attack.mitre.org/techniques/T574/005) [T1574.010](https://attack.mitre.org/techniques/T1574/010) [T1055.003](https://attack.mitre.org/techniques/T1055/003) [T1055.005](https://attack.mitre.org/techniques/T1055/005) [T1620](https://attack.mitre.org/techniques/T1620)
 1. Use ```procmon``` within SysInternals
@@ -442,10 +551,12 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 11. View edge user downloads looking at the History sqlite3 database table, specifically the downloads table. 
 12. View edge user downloads looking at the History sqlite3 database table, specifically the urls table. 
 13. View edge user downloads looking at the History sqlite3 database table, specifically the downloads_url_chains table. 
-14. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```.
+14. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```. 
+15. Use XstReader to read ost files stored on the machine. 
 
 # View Email Attachments [T1566.001](https://attack.mitre.org/techniques/T1566/001)[T1566.002](https://attack.mitre.org/techniques/T1566/002)
 1. View email attachments at ```%USERPROFILE%\AppData\Local\Microsoft\Outlook```. 
+2. Use XstReader to read ost files stored on the machine. 
 
 # View Skype History [No TTP]
 1. View skype history at ```C\%USERPROFILE%\AppData\Roaming\Skype\[skypename]```.
@@ -457,6 +568,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 4. Look at user cache at ```\%USERPROFILE%\AppData\Local\Mozilla\Firefox\Profiles\[random].default\Cache```. 
 5. View the session restore within ```%\USERPROFILE%\AppData\Roaming\Mozilla\Firefox\Profiles\[random].default\sessionstore.js```. 
 6. View flash cookies at ```%APPDATA%\Roaming\Macromedia\FlashPlayer\#SharedObjects\[random]```. 
+7. Open up the SQLlite files using a DB browser and search for moz_visits, moz_places, moz_annons. 
 
 # View Chrome History [T1189](https://attack.mitre.org/techniques/T1189) [T1203](https://attack.mitre.org/techniques/T1203)[T1608.004](https://attack.mitre.org/techniques/T1608/004) [T1218.001](https://attack.mitre.org/techniques/T1218/001) [T1218.005](https://attack.mitre.org/techniques/T1218/005) [T1204.001](https://attack.mitre.org/techniques/T1204/001) [T1176](https://attack.mitre.org/techniques/T1176) [T1185](https://attack.mitre.org/techniques/T1185)
 1. View chrome user account and history at ```%USERPROFILE%\AppData\Local\Google\Chrome\User Data\Default\History```. 
@@ -464,6 +576,9 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 3. Look at user cache at ```%USERPROFILE%\AppData\Local\Google\Chrome\User Data\Default\Cache```. 
 4. Look at session restore data at ```%USERPROFILE%\AppData\Local\Google\Chrome\User Data\Default```. 
 5. View flash cookies at ```%APPDATA%\Roaming\Macromedia\FlashPlayer\#SharedObjects\[random]```. 
+6. Look at manifest.json within with Chrome extension and focus on the background.js or script.js file. 
+7. Use ChromeCacheView application to identify data within the Cache for Chrome. 
+8. Use HindSight application to view cache information. 
 
 # Explore Internet Explorer or Edge Browsing History [T1189](https://attack.mitre.org/techniques/T1189) [T1203](https://attack.mitre.org/techniques/T1203)[T1608.004](https://attack.mitre.org/techniques/T1608/004) [T1218.001](https://attack.mitre.org/techniques/T1218/001) [T1218.005](https://attack.mitre.org/techniques/T1218/005) [T1204.001](https://attack.mitre.org/techniques/T1204/001) [T1176](https://attack.mitre.org/techniques/T1176) [T1185](https://attack.mitre.org/techniques/T1185)
 1. Use ```Autopsy``` as a secondary tool. 
@@ -479,6 +594,9 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 10. View edge user downloads looking at the History sqlite3 database table, specifically the downloads table. 
 12. View edge user downloads looking at the History sqlite3 database table, specifically the urls table. 
 13. View edge user downloads looking at the History sqlite3 database table, specifically the downloads_url_chains table. 
+14. Identify information within the ```AppData\Local\Microsoft\Edge\User Data\Default``` user directory. 
+15. Use ChromeCacheView and load the IE cache instead at ```AppData\Local\Microsoft\Edge\User Data\Default\Cache\Cache_Data```. 
+16. Use HindSight application to view cache information. 
 
 # View Cookies [T1606.001](https://attack.mitre.org/techniques/T1606/001) [T1539](https://attack.mitre.org/techniques/T1539) [T1550.004](https://attack.mitre.org/techniques/T1550/004)
 1. Focus on cookies at ```%\USERPROFILE%\AppData\Roaming\Microsoft\Windows\Cookies``` or ```%\USERPROFILE%\AppData\Local\Microsoft\Windows\INetCookies```. 
@@ -506,6 +624,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 	- Command to use ```LECmd.exe -f [shortcut_file]```
 	- Shortcut files: ```C:\Users\<username>\AppData\Roaming\Microsoft\Windows\Recent\``` or ```C:\Users\<username>\AppData\Roaming\Microsoft\Office\Recent\```
 3. Use ```MFTECmd``` with the USNJournal to find the specific file activity. 
+4. Look for data within ```Appdata\Local\Microsoft\OneDrive\logs```, specifically SyncEngine.odl and SyncDiagnostics.log. Use [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
 
 # Explore Prefetch Files [T1204](https://attack.mitre.org/techniques/T1204)
 1. Use ```PECmd.exe``` (from Eric Zimmerman [here](https://ericzimmerman.github.io/#!index.md) with Command line. 
@@ -692,6 +811,28 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 1. Use ```DeepBlueCLI``` (from [here](https://github.com/sans-blue-team/DeepBlueCLI)) and Powershell. 
 2. Use ```eventvwr.msc``` with Windows System Event logs 7045. 
 3. Use ```eventvwr.msc``` with Windows Security Event logs 4697. 
+4. Open ```services.msc``` within the apps and search for items via GUI. 
+5. Examine via powershell with ```Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}```. 
+6. Examine with PowerShell using 
+	```
+	$services = Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}
+	
+	foreach ($service in $services) {
+    	$serviceName = $service.Name
+    	$serviceDisplayName = $service.DisplayName
+    	$serviceStatus = $service.Status
+    	$serviceWMI = (Get-WmiObject Win32_Service | Where-Object { $_.Name -eq $serviceName })
+    	$servicePath = $serviceWMI.PathName
+    	$serviceUser = $serviceWMI.StartName
+	
+    	Write-Host "Service Name: $serviceName"
+    	Write-Host "Display Name: $serviceDisplayName"
+    	Write-Host "Service Status: $serviceStatus"
+    	Write-Host "Executable Path: $servicePath"
+    	Write-Host "User Context: $serviceUser"
+    	Write-Host ""
+	}
+	```
 
 # View User Authentications [T1078](https://attack.mitre.org/techniques/T1078/)
 1. Use [LogonTracer](https://github.com/JPCERTCC/LogonTracer) to map out logons by users. 
@@ -730,6 +871,8 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 # Identify Phishing Attempts [T1566](https://attack.mitre.org/techniques/T1566/)
 1. Look for registry modifications to ```HKLM\SYSTEM\CurrentControlSet\Services\<NetworkProviderName>\NetworkProvider```, ```HKLM\SYSTEM\CurrentControlSet\Control\Lsa\
 Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order```. 
+2. Look for emails within the user ```AppData\Local\Microsoft\Outlook\``` directory. 
+3. Use XstReader to read ost files stored on the machine. 
 
 # Identity Suspicious DLLs [T1574](https://attack.mitre.org/techniques/T1574/)
 1. Examine changes in DLLs residing in ```C:\Windows\System32```. 
