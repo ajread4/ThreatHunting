@@ -77,7 +77,9 @@
 
 # Disable Protections [T1562.001](https://attack.mitre.org/techniques/T1562/001/)
 1. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Network > Network Connections > Windows Defender Firewall > Domain Profile```. 
-2. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Windows Components```
+2. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Windows Components```. 
+3. Look for command line activity to disable Defender with ```Add-MpPreference -ExclusionPath``` and a specific file name in Powershell. 
+4. Use Event Viewer and search for event ID 5001, 5007 or 5013 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Find LNK File Usage [T1027.012](https://attack.mitre.org/techniques/T1027/012/)
 1. Use LECmd from Eric Zimmerman. Use a command like ```.\LECmd.exe -d C:\Users\Administrator\AppData\Roaming\Microsoft\Windows\Recent --csvf Parsed-LNK.csv --csv C:\Users\Administrator\Desktop```. 
@@ -109,9 +111,13 @@
 1. Look for wierd rule names that were added within the Windows FW event logs. 
 2. Focus on the "Microsoft-Windows-Windows Firewall With Advanced Security/Firewall" Channel with Event ID 2004. 
 3. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Network > Network Connections > Windows Defender Firewall > Domain Profile```. 
+4. Look for command line activity to disable Defender with ```Add-MpPreference -ExclusionPath``` and a specific file name in Powershell. 
+5. Use Event Viewer and search for event ID 5001, 5007 or 5013 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Identify Web Scanning [T1595.003](https://attack.mitre.org/techniques/T1595/003/)
 1. Look through logs within ```/var/log``` to find GET requests within log data. 
+2. Search for logs for Apache that are stored in ```C:\Apache23\logs```. 
+3. Search for logs for IIS that are stored in ```C:\inetpub\logs\LogFiles\<WEBSITE>```. 
 
 # Discover System Time Change [T1124](https://attack.mitre.org/techniques/T1124/)
 1. On a linux system, view the syslog within /var/log/syslog and look for ```systemd-timedated``` for changes in time. 
@@ -204,7 +210,9 @@
 3. Use [TimelineExplorer](https://ericzimmerman.github.io/#!index.md) to find suspicious powershell activity using input csv information. 
 4. Search Windows Security logs for Event ID 4719 and the specific subcategory. 
 5. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Network > Network Connections > Windows Defender Firewall > Domain Profile```. 
-6. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Windows Components```
+6. Look within GPO for changes to Defender/AV/Firewall within ```Computer Configuration > Policies > Administrative Templates > Windows Components```. 
+7. Look for command line activity to disable Defender with ```Add-MpPreference -ExclusionPath``` and a specific file name in Powershell. 
+8. Use Event Viewer and search for event ID 5001, 5007 or 5013 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # View Account Changes [T1098](https://attack.mitre.org/techniques/T1098/) [T1070](https://attack.mitre.org/techniques/T1070/)
 1. Use ```eventvwr.msc``` with Windows Security Event logs event id 4724 to view password reset. 
@@ -252,6 +260,7 @@
 7. Use ```eventvwr.msc``` with Windows Security Event logs 20001. 
 8. View USB connection time at ```HKLM\Software\Microsoft\Windows NT\CurrentVersion\EMDMgmt```.
 9. Determine UNIX timestamps for initial insertion, last insertion, etc for USB devices within the arguments secction of ```SYSTEM\CurrentControlSet\Enum\USBSTOR```. 
+10. Trust certificates for Apple Devices can be stored in ```C:\ProgramData\Apple\Lockdown```. 
 
 # Identify TimeZone [No TTP]
 1. Look at ```SYSTEM\CurrentControlSet\Control\TimeZoneInformation``` within the System Hive. 
@@ -446,6 +455,7 @@
 27. Look at processes within Powershell with ```Get-WmiObject -Class Win32_Process | ForEach-Object {$owner = $_.GetOwner(); [PSCustomObject]@{Name=$_.Name; PID=$_.ProcessId; P_PID=$_.ParentProcessId; User="$($owner.User)"; CommandLine=if ($_.CommandLine.Length -le 60) { $_.CommandLine } else { $_.CommandLine.Substring(0, 60) + "..." }; Path=$_.Path}} | ft -AutoSize```. 
 28. Look for non-standard processes within Elastic ES|QL with: ```FROM logs-* | Where process.name IS NOT NULL | stats count=count(process.name) by process.name, host.hostname | Where count < 5 | stats rare_process_count = COUNT_DISTINCT(process.name), processes = VALUES(process.name) by host.hostname| SORT rare_process_count DESC| Keep host.hostname,rare_process_count, processes```. 
 29. Use ShellBags explorer from EZ Tools. 
+30. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Explore Registry Activity [T1564.001](https://attack.mitre.org/techniques/T1564/001) [T1574](https://attack.mitre.org/techniques/T1574)[T1112](https://attack.mitre.org/techniques/T1112)[T1070.007](https://attack.mitre.org/techniques/T1070/007) [T1070.009](https://attack.mitre.org/techniques/T1070/009)[T1003.002](https://attack.mitre.org/techniques/T1003/002)[T1027.011](https://attack.mitre.org/techniques/T1027/011)[T1137](https://attack.mitre.org/techniques/T1137)[T1012](https://attack.mitre.org/techniques/T1012) [T1033](https://attack.mitre.org/techniques/T1033) [T1569.002](https://attack.mitre.org/techniques/T1569/002) [T1552.002](https://attack.mitre.org/techniques/T1552/002)
 1. Use ```procmon``` within SysInternals
@@ -490,6 +500,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 18. Use ```Get-ScheduledTask | Where-Object {$_.Date —ne $null —and $_.State —ne "Disabled"} | Sort-Object Date | select Date,TaskName,Author,State,TaskPath | ft```. 
 19. Open ```services.msc``` within the apps and search for items via GUI. 
 20. Examine via powershell with ```Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}```. 
+21. Use ```eventvwr.msc``` and find logs in Apps and Services Logs -> Microsoft -> Windows -> Task Scheduler -> Operational with event IDs 106, 100, and 129. 
 
 # Explore Process Thread Activity [T1134.003](https://attack.mitre.org/techniques/T1134/003) [T1574.005](https://attack.mitre.org/techniques/T574/005) [T1574.010](https://attack.mitre.org/techniques/T1574/010) [T1055.003](https://attack.mitre.org/techniques/T1055/003) [T1055.005](https://attack.mitre.org/techniques/T1055/005) [T1620](https://attack.mitre.org/techniques/T1620)
 1. Use ```procmon``` within SysInternals
@@ -509,7 +520,8 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 12. Use [Live Forensicator](https://github.com/Johnng007/Live-Forensicator) with ```.\Forensicator -EVTX EVTX``` and identify processes within processes.html. 
 13. Run the following command in PowerShell on the system: ```Get-NetTCPConnection | select Local*, Remote*, State, OwningProcess,` @{n="ProcName";e={(Get-Process -Id $_.OwningProcess).ProcessName}},` @{n="ProcPath";e={(Get-Process -Id $_.OwningProcess).Path}} | sort State | ft -Auto ```. 
 14. Look at processes within Powershell with ```Get-WmiObject -Class Win32_Process | ForEach-Object {$owner = $_.GetOwner(); [PSCustomObject]@{Name=$_.Name; PID=$_.ProcessId; P_PID=$_.ParentProcessId; User="$($owner.User)"; CommandLine=if ($_.CommandLine.Length -le 60) { $_.CommandLine } else { $_.CommandLine.Substring(0, 60) + "..." }; Path=$_.Path}} | ft -AutoSize```. 
-15. Look for non-standard processes within Elastic ES|QL with: ```FROM logs-* | Where process.name IS NOT NULL | stats count=count(process.name) by process.name, host.hostname | Where count < 5 | stats rare_process_count = COUNT_DISTINCT(process.name), processes = VALUES(process.name) by host.hostname| SORT rare_process_count DESC| Keep host.hostname,rare_process_count, processes```
+15. Look for non-standard processes within Elastic ES|QL with: ```FROM logs-* | Where process.name IS NOT NULL | stats count=count(process.name) by process.name, host.hostname | Where count < 5 | stats rare_process_count = COUNT_DISTINCT(process.name), processes = VALUES(process.name) by host.hostname| SORT rare_process_count DESC| Keep host.hostname,rare_process_count, processes```. 
+16. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Explore File Read Activity [No TTP]
 1. Use ```procmon``` within SysInternals
@@ -675,6 +687,8 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 	- Command to use ```regripper -f [Hive] -a```.
 15. Look for history file at ```APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt```. 
 16. Use Eric Zimmermans Amcache parser in Powershell. 
+17. Use ```eventvwr.msc``` on a Windows system and navigate to Applications and Services Logs -> Microsoft -> Windows PowerShell look for EventID 600. 
+18. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # View PowerShell Command Execution [T1059.001](https://attack.mitre.org/techniques/T1059/001) [T1546.013](https://attack.mitre.org/techniques/T1546/013)
 1. Use ```eventvwr.msc``` on a Windows system and navigate to Applications and Services Logs -> Microsoft -> Windows -> PowerShell -> Operational and look for EventID 4104.  
@@ -687,6 +701,9 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 8. Examine prefetch files with [w10pf_parse.py](https://github.com/DavidCruciani/tools/blob/master/win10_prefetch/w10pf_parse.py). 
 9. Use [RegRipper](https://www.sans.org/blog/regripper-ripping-registries-with-ease/) to highlight powershell downloads with IEX Download String that can be found in LastRunMRU. 
 	- Command to use ```regripper -f [Hive] -a```.
+10. Look for history file at ```APPDATA\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt```. 
+11. Use ```eventvwr.msc``` on a Windows system and navigate to Applications and Services Logs -> Microsoft -> Windows PowerShell look for EventID 600. 
+12. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Determine the Number Of Log Names [No TTP]
 1. Use ```wevutil.exe``` with Powershell 
@@ -743,6 +760,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 8. Identify interactions with ```HKLM\SAM\Domains\Accounts\Users```. 
 9. Look for process access to common password locations with Sysmon Event ID 10 or 1.
 10. Look for process creation Event ID 4688 to common password storage locations. 
+11. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Find Common RAT Connections. [T1021](https://attack.mitre.org/techniques/T1021)
 1. Use ```Get-WinEvent``` with Sysmon Event Logs. 
@@ -862,11 +880,14 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 2. Use Systinternals autorunsc tool. 
 3. Use PowerShell with the following command: ```Get-CimInstance Win32_StartupCommand | Select-Object Name, command, Location, User | fl```. 
 4. Use Powershell with the following command: ```$winlogonPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon"; "Userinit: $((Get-ItemProperty -Path $winlogonPath -Name 'Userinit').Userinit)"; "Shell: $((Get-ItemProperty -Path $winlogonPath -Name 'Shell').Shell)"```. 
+5. Examine Task Scheduler GUI for triggers at Startup. 
 
 # View Hosted Web Application Exploitation [T1190](https://attack.mitre.org/techniques/T1190/)
 1. Use ```eventvwr.msc``` with Windows Security Event logs 4688 for process creation events on the host. 
 2. View suspicious php or .jsp files within ```/var/log/httpd/access.log```.
 3. View suspicious php files within ```/var/log/apache2/access.log```. 
+4. Search for logs for Apache that are stored in ```C:\Apache23\logs```. 
+5. Search for logs for IIS that are stored in ```C:\inetpub\logs\LogFiles\<WEBSITE>```. 
 
 # Identify Phishing Attempts [T1566](https://attack.mitre.org/techniques/T1566/)
 1. Look for registry modifications to ```HKLM\SYSTEM\CurrentControlSet\Services\<NetworkProviderName>\NetworkProvider```, ```HKLM\SYSTEM\CurrentControlSet\Control\Lsa\
@@ -883,6 +904,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 # Identify Credential Dumping [T1003](https://attack.mitre.org/techniques/T1003/)
 1. Use ```eventvwr.msc``` with Windows Security Event logs Event ID 4688 with vssadmin. 
 2. View ESENT logs with Event ID 325, 326, or 327 in Windows Application Logs. 
+3. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
 
 # Identify Brute Force Attempts [T1110](https://attack.mitre.org/techniques/T1110/)
 1. Use ```eventvwr.msc``` with Windows Security Event logs Event ID 4776. 
