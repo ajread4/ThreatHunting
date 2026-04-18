@@ -1,3 +1,16 @@
+# Find Systemd Manipulation [T1543.002](https://attack.mitre.org/techniques/T1543/002/)
+1. Look for unrecognized systemd units: 
+```
+find \
+    /{etc,lib}/systemd/system -type f \
+    \( -name '*.service' -o -name '*.socket' -o -name '*.timer' -o -name '*.path' -o -name '*.mount' -o -name '*.target' \) 2>/dev/null | \
+    while read -r f; do dpkg -S "${f#/}" >/dev/null; done
+```
+2. Check changes to systemd units with ```systemd-delta```. 
+
+# Exploitation of SSH [T1021.004](https://attack.mitre.org/techniques/T1021/004/)
+1. Look for readable ssh files withn /etc/ or other common locations on the system. Confirm the escalation using the auth.log. 
+ 
 # Archive Data with OpenSSL [T1560.001](https://attack.mitre.org/techniques/T1560/001/)
 1. Look for use of openssl to encrypt data before tunneling takes place with ```openssl enc -aes-256-cbc -salt -pass pass:test123 -in /home/ransom_test/upload.tar.gz -out /home/ransom_test/encrypted_upload.tar.gz```. 
 
@@ -14,6 +27,7 @@
 # Find Command Line Execution [T1059.004](https://attack.mitre.org/techniques/T1059/004/)
 1. Look within the user home directories for ```.bash_history```. 
 2. Look for aliasing within ```.bashrc``` in the user home directory. 
+3. Use ```ausearch -sc execve -i``` to look for command line execution. 
 
 # Find USB Devices [T1025](https://attack.mitre.org/techniques/T1025/)
 1. Look at ```usb``` strings within ```/var/log/syslog```. 
@@ -27,11 +41,26 @@
 2. On the command line, use ```osqueryi``` to examine processes with ```SELECT pid, fd, socket, local_address, remote_address FROM process_open_sockets WHERE pid = [PID];```. 
 3. View process execution with [pspy](https://github.com/DominicBreuker/pspy). 
 4. Look for aliasing within ```.bashrc``` in the user home directory. 
+5. Use the following command to look at the persistent processes and their symbolic links: 
+```
+for i in $(ps ax -o pid); do \
+    readlink -eq /proc/$i/exe; \
+done 2>/dev/null | \
+    sort -u
+```
 
 # Examine Executables [T1547.004](https://attack.mitre.org/techniques/T1547/004/) [T1059.006](https://attack.mitre.org/techniques/T1059/006/) [T1559.001]([T1070.004](https://attack.mitre.org/techniques/T1559/001/)) [T1027.004]([T1070.004](https://attack.mitre.org/techniques/T1027/004/)) [T1027.004]([T1070.009](https://attack.mitre.org/techniques/T1027/009/)) [T1055.002](https://attack.mitre.org/techniques/T1055/002)
 1. On the command line, use ```lsof``` to examine process calls and possible network connections. 
 2. On the command line, use ```osqueryi``` to examine processes with ```SELECT pid, fd, socket, local_address, remote_address FROM process_open_sockets WHERE pid = [PID];```. 
 3. Look for aliasing within ```.bashrc``` in the user home directory. 
+4. Use ```ausearch -sc execve -i``` to look for command line execution. 
+5. Use the following command to look at the persistent processes and their symbolic links: 
+```
+for i in $(ps ax -o pid); do \
+    readlink -eq /proc/$i/exe; \
+done 2>/dev/null | \
+    sort -u
+```
 
 # Explore Processes [T1059](https://attack.mitre.org/techniques/T1059) [T1055](https://attack.mitre.org/techniques/T1055/)
 1. On the command line, use ```lsof``` to examine process calls and possible network connections. 
@@ -40,6 +69,14 @@
 4. Find all running processes using ```osqueryi``` wiht ```SELECT pid, name, path, state FROM processes;```. 
 5. Find the open files associated with a running process using ```osueryi``` with the ```process_open_files_``` table. 
 6. Look for aliasing within ```.bashrc``` in the user home directory. 	
+7. Use ```ausearch -sc execve -i``` to look for command line execution. 
+8. Use the following command to look at the persistent processes and their symbolic links: 
+```
+for i in $(ps ax -o pid); do \
+    readlink -eq /proc/$i/exe; \
+done 2>/dev/null | \
+    sort -u
+```
 
 # User Creation [T1136](https://attack.mitre.org/techniques/T1136/)
 1. Look within auth.log for ```useradd``` events. 
@@ -68,6 +105,13 @@
 1. Use the command ```dpkg -l``` on the system.  
 2. Search for package installs within ```/var/log/dpkg.log```. 
 3. Use the command ```apt list --installed```. 
+4. Look for unrecognized binaries using the command line with: 
+```
+for i in $(find /{,s}bin/ -type f -perm /111); do echo "${i#/}"; done | \
+    LC_ALL=C xargs dpkg-query -S | \
+    grep -F 'no path found'
+```
+5. Verify package integrity with ```dpkg -V```. 
 
 # View User Authentications [T1078](https://attack.mitre.org/techniques/T1078/)
 1. Look at ```/var/log/auth.log``` file and focus on authentications with ```Accepted Password``` or ```Sessions opened```. 

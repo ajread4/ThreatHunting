@@ -368,7 +368,7 @@
 15. Open ```services.msc``` within the apps and search for items via GUI. 
 16. Examine the registry at ```HKLM\SYSTEM\CurrentControlSet\Services```. 
 17. Examine via powershell with ```Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}```. 
-18. Examine with PowerShell using 
+18. Examine with PowerShell using: 
 	```
 	$services = Get-Service | Where-Object {$_.Status -eq "Running" -and $_.StartType -eq "Automatic"}
 	
@@ -387,6 +387,19 @@
     	Write-Host "User Context: $serviceUser"
     	Write-Host ""
 	}
+	```
+19. Examine with PowerShell using: 
+	```
+	$services = Get-Service | Where-Object {$_.StartType -eq "Automatic"}
+	
+	foreach ($service in $services) {                                                        
+    $serviceName = $service.Name                                                           
+    $serviceWMI = (Get-WmiObject Win32_Service | Where-Object { $_.Name -eq $serviceName})      
+    $servicePath = $serviceWMI.PathName
+    Write-Host "Service Name: $serviceName"
+    Write-Host "Executable Path: $servicePath"
+    Write-Host "--------------------"
+}
 	```
 
 # Analyze OneNote Files [T1137](https://attack.mitre.org/techniques/T1137)
@@ -851,6 +864,18 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
     	Write-Host ""
 	}
 	```
+7. Another option to examine with Powershell using: 
+	```
+	$services = Get-Service | Where-Object {$_.StartType -eq "Automatic"}
+	foreach ($service in $services) {                                                        
+    $serviceName = $service.Name                                                           
+    $serviceWMI = (Get-WmiObject Win32_Service | Where-Object { $_.Name -eq $serviceName})      
+    $servicePath = $serviceWMI.PathName
+    Write-Host "Service Name: $serviceName"
+    Write-Host "Executable Path: $servicePath"
+    Write-Host "--------------------"
+}
+	```
 
 # View User Authentications [T1078](https://attack.mitre.org/techniques/T1078/)
 1. Use [LogonTracer](https://github.com/JPCERTCC/LogonTracer) to map out logons by users. 
@@ -874,6 +899,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 18. Use Live-Forensicator Tool with ```.\Forensicator -EVTX EVTX```, and search for RDP Logon Activities with an html file, can be found [here](https://github.com/Johnng007/Live-Forensicator). 
 19. Use [Chainsaw](https://github.com/WithSecureLabs/chainsaw/tree/master) and an EVTX dump to search for failed logons with ```./chainsaw hunt [evtx] -r ./rules/```. 
 20. Use powershell with ```Get-LocalUser | Select-Object Name, LastLogon```. 
+21. Use Eric Zimmerman's evtx tool [here](https://github.com/EricZimmerman/evtx?tab=readme-ov-file). 
 
 # Examine Startup Actions [T1547](https://attack.mitre.org/techniques/T1547/)
 1. View ```desktop.ini``` for actions taken during startup. 

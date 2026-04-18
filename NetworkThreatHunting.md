@@ -84,6 +84,7 @@
 4. Use WireShark to find DNS zone transfers with ```dns.qry.type == 252```. 
 5. Look at Firewall logs on the host at ```C:\Windows\System32\LogFiles\Firewall```. 
 6. Check the DNS cache with ```Get-DnsClientCache | ? Entry -NotMatch "workst|servst|memes|kerb|ws|ocsp" | out-string -width 1000```. 
+7. Look on the host within ```C:\Windows\System32\drivers\etc\hosts``` file.  
 
 # View SNMP Activity [No TTP]
 1. Use ```zeek``` with snmp.log from pcap
