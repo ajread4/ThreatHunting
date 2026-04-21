@@ -4,8 +4,8 @@ Threat hunting guides created by me, AJ Read, from experience hunting or classes
 
 # Current Guides
 1. Cloud Threat Hunting 
-2. Host Threat Hunting
-3. Network Threat Hunting
+2. Windows Host Threat Hunting
+3. Windows Network Threat Hunting
 4. Linux Host Threat Hunting
 5. Linux Network Threat Hunting
 6. Mac Host Threat Hunting
