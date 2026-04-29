@@ -264,6 +264,7 @@
 8. View USB connection time at ```HKLM\Software\Microsoft\Windows NT\CurrentVersion\EMDMgmt```.
 9. Determine UNIX timestamps for initial insertion, last insertion, etc for USB devices within the arguments secction of ```SYSTEM\CurrentControlSet\Enum\USBSTOR```. 
 10. Trust certificates for Apple Devices can be stored in ```C:\ProgramData\Apple\Lockdown```. 
+11. Review Event ID 303 for dismounting of devices by user within Microsoft-Windows-NTFS.evtx logs. 
 
 # Identify TimeZone [No TTP]
 1. Look at ```SYSTEM\CurrentControlSet\Control\TimeZoneInformation``` within the System Hive. 
@@ -493,6 +494,7 @@
 Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkProvider\Order```. 
 11. Use ```regripper``` to examine the NTUSER.dat file for a specific user looking at UserAssist. 
 12. Examine the RecentFiles at ```NTUSER.DAT\Software\Microsoft\Windows\CurrentVersion\Explorer\RecentDocs```.
+13. Review $MFT and look for file creation with SYSTEM, SECURITY, or SAM to attacker data exfiltration folder. 
 
 # Explore Scheduled Tasks [T1036.004](https://attack.mitre.org/techniques/T136/004) [T1053.005](https://attack.mitre.org/techniques/T1053/005)
 1. Use ```Get-WinEvent``` with Sysmon Event Logs. 
@@ -839,6 +841,8 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 1. Use ```MFTECmd.exe``` (from Eric Zimmerman [here](https://ericzimmerman.github.io/#!index.md) on the Windows command line. 
 	- Command to use ```MCTECmd.exe -f [file] --csv [path_to_csv_output]```
 2. Use ```Autopsy``` as a secondary tool. 
+3. Look for event ID 303 for dismount of volume shadow copy ntds.dit files within the Microsoft-Windows-NTFS.evtx logs. 
+4. Look at event ID 7036 within the System event logs to find the state set to running for the Volume Shadow Service
 
 # Parse $LogFile for Windows NTFS [T1564](https://attack.mitre.org/techniques/T1564)
 1. Use ```MFTECmd.exe``` (from Eric Zimmerman [here](https://ericzimmerman.github.io/#!index.md) on the Windows command line. 
@@ -939,6 +943,8 @@ Notification Packages```, or ```HKLM\SYSTEM\CurrentControlSet\Control\NetworkPro
 1. Use ```eventvwr.msc``` with Windows Security Event logs Event ID 4688 with vssadmin. 
 2. View ESENT logs with Event ID 325, 326, or 327 in Windows Application Logs. 
 3. Use Event Viewer and search for event ID 1116 within Apps and Services Logs -> Microsoft -> Windows -> Windows Defender -> Operational. 
+4. Look at event ID 7036 within the System event logs to find the state set to running for the Volume Shadow Service. 
+5. Look within the \Microsoft-Windows-NTFS.evtx logs for the events with Dismount Reason as User request and the device as ```\\Device\\HarddiskVolumeShadowCopy``` or something similar. 
 
 # Identify Brute Force Attempts [T1110](https://attack.mitre.org/techniques/T1110/)
 1. Use ```eventvwr.msc``` with Windows Security Event logs Event ID 4776. 

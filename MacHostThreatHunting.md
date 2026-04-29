@@ -14,7 +14,7 @@
 2. Use [mac_apt](https://github.com/ydkhatri/mac_apt) with ```python3 mac_apt.py DD /home/ubuntu/[name of image].img INSTALLHISTORY -c -o /home/ubuntu/evidence/installhistory/``` and look for installers!
 
 # Service Permissions [T1543.003](https://attack.mitre.org/techniques/T1543/003/)
-1. Look within ```/Library/Application Support/com.apple.TCC/TCC.db``` and use the AOLLO tcc_db.txt. The full list with explanations can be found here [deepdive](https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive#all-services). 
+1. Look within ```/Library/Application Support/com.apple.TCC/TCC.db``` and use the APOLLO tcc_db.txt. The full list with explanations can be found here [deepdive](https://www.rainforestqa.com/blog/macos-tcc-db-deep-dive#all-services). 
 2. Look within ```/Library/Receipts/InstallHistory.plist```. 
 3.  Use [mac_apt](https://github.com/ydkhatri/mac_apt) with ```python3 mac_apt.py DD /home/ubuntu/[name of image].img TCC -c -o /home/ubuntu/evidence/tcc/``` to find all permissions. 
 

